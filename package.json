@@ -1,0 +1,21 @@
+{
+  "name": "nodeserveri",
+  "version": "1.0.0",
+  "description": "tarkoitettu puhelinluetteloon",
+  "main": "nodeserver.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node nodeserver.js",
+    "dev": "nodemon nodeserver"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}

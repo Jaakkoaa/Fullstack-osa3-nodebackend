@@ -1,0 +1,9 @@
+GET http://localhost:3001/api/persons 
+
+
+
+DELETE http://localhost:3001/api/persons/8202
+
+
+
+POST http://localhost:3001/api/persons/Ronnie Coleman/0222314202202
