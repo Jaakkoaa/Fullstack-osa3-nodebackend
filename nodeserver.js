@@ -9,43 +9,26 @@ app.use(morgan('tiny'))
 app.use(cors())
 app.use(express.static('build'))
 
-let persons = [
-    {
-        "name": "Dan Abramov",
-        "number": "23457889",
-        "id": 3
-      },
-      {
-        "name": "Jaakko Aakula",
-        "number": "88088080808",
-        "id": 5
-      },
-      {
-        "name": "Linus Storvalds",
-        "number": "29292929292",
-        "id": 6
-      },
-      {
-        "name": "Adrijan Balic",
-        "number": "22222222222",
-        "id": 7
-      },
-      {
-        "name": "Tony Montana",
-        "number": "020202020202",
-        "id": 8
-      },
-      {
-        "name": "Pablo Escobar",
-        "number": "2002020220",
-        "id": 9
-      }
-]
+const Person = require('./models/person')
+const { response } = require('express')
 
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message)
 
-app.get('/api/persons', (req, res) => {
+  if (error.name === 'CastError') {
+    return response.status(400).send({ error: 'malformatted id' })
+  }
+
+  next(error)
+}
+
+app.get('/api/persons', (req, res, next) => {
     console.log('serveri ymmärtää pyynnön')
-    res.json(persons)
+    Person.find({}).then(persons => {
+      console.log(persons)
+      res.json(persons)
+    })
+    .catch(error => next(error))
     
 } )
 
@@ -53,31 +36,41 @@ app.get('/info', (req, res) => {
   console.log('pyydetään info')
   res.writeHead(200, { 'Content-Type': 'text/plain' })
   res.end('puhelinluettelossa on ' + persons.length + ' ihmista \n ' + new Date)
-
 })
 
-app.get('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
-  console.log(id)
-  const person = persons.find(person => person.id === id)
-  console.log(person)
-  res.json(person)
+app.get('/api/persons/:id', (req, res, next) => {
+  
+  Person.findById(req.params.id)
+  .then(person => {
+    if (person) {
+      res.json(person)
+    } else {
+      res.status(404).end
+    }
+  })
+  .catch(error => {
+    console.log(error)
+    next(error)
+  }
+  )
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  const id = Number(req.params.id)
+app.delete('/api/persons/:id', (req, res, next) => {
+  const id = req.params.id
   console.log(id)
 
-  var index = persons.map(person => {
-    return person.id;
-  }).indexOf(id)
-
-  console.log(index)
-  persons.splice(index, 1)
-  res.json(persons)
+  Person.findByIdAndRemove(id)
+    .then(result => {
+      res.json(result).end
+      
+    })
+    .catch(error => {
+      console.log(error)
+      next(error)
+    })
 })
  
-app.post('/api/persons/:name/:number', (req, res) => {
+app.post('/api/persons/:name/:number', (req, res, next) => {
 
   const name = req.params.name
   console.log(name)
@@ -88,31 +81,20 @@ app.post('/api/persons/:name/:number', (req, res) => {
   const id = Math.round(Math.random() * 10000)
   console.log(id)
 
-  const person = {
+  const person = new Person({
     name : name,
     number : number,
     id : id
-  }
+  })
 
-  console.log(person)
-
-
-if (persons.find(person => person.name == name)) {
-
-    res.writeHead(400, { 'Content-Type': 'text/plain' })
-    res.end('error: name must be unique')
-    console.log('error: name must be unique')
-  } else if (persons.find(person => person.number == number)) {
-
-    res.writeHead(400, { 'Content-Type': 'text/plain' })
-    res.end('error: number must be unique')
-    console.log('error: number must be unique')
-
-  } else {
-    persons.push(person)
+  person.save().then(result => {
+    console.log(person)
     res.json(person)
-  }
+  })
+  .catch(error => next(error))
 })
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
