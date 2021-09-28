@@ -21,7 +21,7 @@ let persons = [
         "id": 5
       },
       {
-        "name": "Linus Storvalds",
+        "name": "Linus Torvalds",
         "number": "29292929292",
         "id": 6
       },
